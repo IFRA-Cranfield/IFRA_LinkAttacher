@@ -20,7 +20,7 @@
   <depend>gazebo_msgs</depend>
   <depend>rclcpp</depend>
   
-  <depend>linkattacher_msgs</depend>
+  <build_depend>linkattacher_msgs</build_depend>
 
   <export>
     <build_type>ament_cmake</build_type>

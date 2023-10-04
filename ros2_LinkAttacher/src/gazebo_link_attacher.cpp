@@ -50,6 +50,9 @@
 std::vector<JointSTRUCT> GV_joints;
 JointSTRUCT GV_jointSTR;
 
+// JointName:
+std::string JointName = "None";
+
 namespace gazebo_ros
 {
 
@@ -120,6 +123,7 @@ void GazeboLinkAttacherPrivate::Attach(
 {
 
   // CHECK if -> Joint already exists in GV_joints:
+  /* THIS IS NO LONGER NEEDED, SINCE THE JOINT IS REMOVED AFTER DETACHING!
   JointSTRUCT j;
   if (this->getJoint(_req->model1_name, _req->link1_name, _req->model2_name, _req->link2_name, j)){
     j.joint->Attach(j.l1, j.l2);
@@ -127,6 +131,7 @@ void GazeboLinkAttacherPrivate::Attach(
     _res->message = "ATTACHED: {MODEL , LINK} -> {" + _req->model1_name + " , " + _req->link1_name + "} -- {" + _req->model2_name + " , " + _req->link2_name + "}.";
     return;
   }
+  */
 
   // Get the first link:
   gazebo::physics::ModelPtr model1 = world_->ModelByName(_req->model1_name);
@@ -157,7 +162,7 @@ void GazeboLinkAttacherPrivate::Attach(
   }
 
   // Create a fixed joint between the two links:
-  std::string JointName = _req->model1_name + "_" + _req->link1_name + "_" + _req->model2_name + "_" + _req->link2_name + "_joint";
+  JointName = _req->model1_name + "_" + _req->link1_name + "_" + _req->model2_name + "_" + _req->link2_name + "_joint";
   gazebo::physics::JointPtr joint = model1->CreateJoint(JointName, "revolute", link1, link2);
   joint->Attach(link1, link2);
   joint->Load(link1, link2, ignition::math::Pose3d());
@@ -201,6 +206,12 @@ void GazeboLinkAttacherPrivate::Detach(
     j.joint->Detach();
     _res->success = true;
     _res->message = "DETACHED: {MODEL , LINK} -> {" + _req->model1_name + " , " + _req->link1_name + "} -- {" + _req->model2_name + " , " + _req->link2_name + "}.";
+    
+    // (+) Remove joint --> This fixes the following problem: If the object to be attached is removed and spawned again, 
+    // gazebo breaks when attaching it again, since the joint already existed. Joint must be REMOVED when detaching.
+    gazebo::physics::ModelPtr model1 = world_->ModelByName(_req->model1_name);
+    model1->RemoveJoint(JointName);
+    
     return;
   } else {
     _res->success = false;

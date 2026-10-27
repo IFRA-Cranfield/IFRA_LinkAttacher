@@ -25,52 +25,38 @@
 
 # ======= CITE OUR WORK ======= #
 # You can cite our work with the following statement:
-# IFRA-Cranfield (2023) Gazebo-ROS2 Link Attacher. URL: https://github.com/IFRA-Cranfield/IFRA_LinkAttacher.
+# IFRA-Cranfield (2023) IFRA Gazebo-ROS 2 Link Attacher. URL: https://github.com/IFRA-Cranfield/IFRA_LinkAttacher.
 */
 
-#ifndef GAZEBO_LINK_ATTACHER_HPP_
-#define GAZEBO_LINK_ATTACHER_HPP_
 
-#include <gazebo/common/Plugin.hh>
+#ifndef LINKATTACHER_ROS2__GZ_LINK_ATTACHER_HPP_
+#define LINKATTACHER_ROS2__GZ_LINK_ATTACHER_HPP_
+
 #include <memory>
+#include <gz/sim/System.hh>
 
-struct JointSTRUCT
+namespace gz::sim::systems
 {
-  std::string model1;
-  gazebo::physics::ModelPtr m1;
-  std::string link1;
-  gazebo::physics::LinkPtr l1;
-  std::string model2;
-  gazebo::physics::ModelPtr m2;
-  std::string link2;
-  gazebo::physics::LinkPtr l2;
-  gazebo::physics::JointPtr joint;
-};
+class GzLinkAttacherPrivate;
 
-namespace gazebo_ros
-{
-
-class GazeboLinkAttacherPrivate;
-
-class GazeboLinkAttacher : public gazebo::WorldPlugin
+class GzLinkAttacher : public System,
+  public ISystemConfigure,
+  public ISystemPreUpdate,
+  public ISystemReset
 {
 public:
-  
-  // Constructor:
-  GazeboLinkAttacher();
+  GzLinkAttacher();
+  ~GzLinkAttacher() override;
 
-  // Destructor:
-  virtual ~GazeboLinkAttacher();
-
-  // LOAD plugin:
-  void Load(gazebo::physics::WorldPtr _world, sdf::ElementPtr _sdf) override;
+  void Configure(
+    const Entity & entity, const std::shared_ptr<const sdf::Element> & sdf,
+    EntityComponentManager & ecm, EventManager & event_manager) override;
+  void PreUpdate(const UpdateInfo & info, EntityComponentManager & ecm) override;
+  void Reset(const UpdateInfo & info, EntityComponentManager & ecm) override;
 
 private:
-
-  std::unique_ptr<GazeboLinkAttacherPrivate> impl_;
-
+  std::unique_ptr<GzLinkAttacherPrivate> impl_;
 };
+}  // namespace gz::sim::systems
 
-}  // namespace gazebo_ros
-
-#endif  // GAZEBO_LINK_ATTACHER_HPP_
+#endif  // LINKATTACHER_ROS2__GZ_LINK_ATTACHER_HPP_

@@ -1,9 +1,9 @@
 <?xml version="1.0"?>
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
-  <name>ros2_linkattacher</name>
+  <name>linkattacher_ros2</name>
   <version>0.0.0</version>
-  <description>IFRA-Cranfield (Cranfield University, UK). Package: ROS 2 LinkAttacher for Gazebo Simulation</description>
+  <description>IFRA-Cranfield LinkAttacher for ROS 2 Jazzy and Gazebo Harmonic</description>
 
   <author>Mikel Bueno Viso</author>
   <maintainer email="Mikel.Bueno-Viso@cranfield.ac.uk">Mikel Bueno Viso</maintainer>
@@ -12,15 +12,11 @@
 
   <buildtool_depend>ament_cmake</buildtool_depend>
 
-  <test_depend>ament_lint_auto</test_depend>
-  <test_depend>ament_lint_common</test_depend>
-
-  <depend>gazebo_ros</depend>
-  <depend>gazebo_dev</depend>
-  <depend>gazebo_msgs</depend>
+  <depend>gz_sim_vendor</depend>
+  <depend>gz_plugin_vendor</depend>
   <depend>rclcpp</depend>
   
-  <build_depend>linkattacher_msgs</build_depend>
+  <depend>linkattacher_msgs</depend>
 
   <export>
     <build_type>ament_cmake</build_type>

@@ -25,7 +25,7 @@
 
 # ======= CITE OUR WORK ======= #
 # You can cite our work with the following statement:
-# IFRA-Cranfield (2023) Gazebo-ROS2 Link Attacher. URL: https://github.com/IFRA-Cranfield/IFRA_LinkAttacher.
+# IFRA-Cranfield (2023) Gazebo-ROS 2 Link Attacher. URL: https://github.com/IFRA-Cranfield/IFRA_LinkAttacher.
 -->
 
 <div id="top"></div>
@@ -35,7 +35,7 @@
 <br />
 <div align="center">
 
-  <h2 align="center">IFRA_LinkAttacher - Gazebo-ROS2 Plugin</h2>
+  <h2 align="center">IFRA_LinkAttacher - Gazebo-ROS 2 Plugin</h2>
 
   <p align="center">
     IFRA (Intelligent Flexible Robotics and Assembly) Group
@@ -74,13 +74,21 @@ Centre for Robotics and Assembly:
 
 ### IFRA_LinkAttacher Repository
 
-The IFRA_LinkAttacher repository contains 2 different ROS2 packages, which enable the attachment of 2 different entity links in Gazebo. This attachment is done through a simple ROS2/Gazebo plugin, and can be used for many applications in a Gazebo simulation environment. 
+The IFRA_LinkAttacher repository contains three ROS 2 packages:
 
-The plugin has been designed with the main purpose of simulating object pick and place tasks using Robot Manipulators in Gazebo. The link attachment/detachment feature is available through a ROS2 Service Server, which creates a temporary fixed joint between two links for the "ATTACH" request, and removes the previously generated joint for the "DETACH" service. Thanks to this functionality, objects can be easily attached to any end-effector and pick/place tasks can be simulated in Gazebo-ROS2.
+- `linkattacher_msgs`: the AttachLink and DetachLink service definitions.
+- `linkattacher_ros2`: the Gazebo Harmonic world plugin and its environment hook.
+- `linkattacher_test`: UR3/cube test assets.
 
-DEVELOPMENT: For the design of the IFRA_LinkAttacher ROS2/Gazebo plugin, the design pattern of the working [gazebo_ros_state](https://github.com/ros-simulation/gazebo_ros_pkgs/blob/ros2/gazebo_ros/src/gazebo_ros_state.cpp) ROS2 plugin has been followed. The code has been modified/adapted for the main purpose of this new plugin (ATTACH/DETACH links), following the Gazebo API documentation for [gazebo::physics](http://osrf-distributions.s3.amazonaws.com/gazebo/api/11.0.0/group__gazebo__physics.html).
+The plugin has been designed with the main purpose of simulating object pick and place tasks using Robot Manipulators in Gazebo. The link attachment/detachment feature is available through a ROS 2 Service Server, which creates a temporary fixed joint between two links for the "ATTACH" request, and removes the previously generated joint for the "DETACH" service. Thanks to this functionality, objects can be easily attached to any end-effector and pick/place tasks can be simulated in Gazebo-ROS 2.
 
-__VIDEO: Pick and Place Task - ROS2 Gazebo Simulation (UR3 + Robotiq 2f-85)__
+This version targets **Ubuntu 24.04, ROS 2 Jazzy and Gazebo Harmonic (gz-sim 8)**. It is a Gazebo Sim world system plugin using `components::DetachableJoint` to create a real fixed joint. ROS service callbacks run on the simulation thread during `PreUpdate`, including paused updates.
+
+The migration was informed by [TrebezIA's Jazzy port](https://github.com/TrebezIA/IFRA_LinkAttacher/tree/jazzy), reviewed at commit `a68cbb9c9714955c970dc0fe4ca80289a0d1a3d5`. That fork uses pose commands and locks `box_*` models for its cargo application. This implementation keeps physical attachment and detachment: objects retain their current relative pose when attached, and gravity and collisions apply after detaching. Multiple objects may be attached simultaneously; unrelated models are never frozen.
+
+The video below shows the original Gazebo Classic implementation.
+
+__VIDEO: Pick and Place Task - ROS 2 Gazebo Simulation (UR3 + Robotiq 2f-85)__
 
 [![Alt text](https://img.youtube.com/vi/t4L4VAfgqZw/0.jpg)](https://www.youtube.com/watch?v=t4L4VAfgqZw)
 
@@ -88,46 +96,159 @@ __VIDEO: Pick and Place Task - ROS2 Gazebo Simulation (UR3 + Robotiq 2f-85)__
 
 ## INSTALLATION
 
-Both packages in this repository have been developed, executed and tested in a Ubuntu 22.04 machine with ROS 2 Humble (the plugin has not been tested in other ROS2 distributions yet). It can be easily downloaded and installed by executing the following commands:
+Install dependencies and build from a terminal sourced for Jazzy:
 
-```sh
+```bash
 cd ~/dev_ws/src
-git clone https://github.com/IFRA-Cranfield/IFRA_LinkAttacher.git
+git clone -b jazzy https://github.com/IFRA-Cranfield/IFRA_LinkAttacher.git
 cd ~/dev_ws
 colcon build
 ```
+
+The build uses the ROS `gz_sim_vendor` and `gz_plugin_vendor` packages, with no hardcoded Gazebo include paths. Sourcing the workspace adds the installed plugin library directory to `GZ_SIM_SYSTEM_PLUGIN_PATH`. For the plugin alone, build `--packages-up-to linkattacher_ros2`. The plugin package contains no test targets or test assets; all testing belongs to `linkattacher_test`. The UR3 test uses the existing `ros2_SimRealRobotControl` workspace packages.
 
 <br />
 
 ## USAGE
 
-The IFRA_LinkAttacher ROS2-Gazebo plugin offers the link attachment/detachment feature though 2 different ROS2 Services, which can be called by executing the following commands:
+The plugin provides two ROS 2 services for attaching and detaching links:
 
-```sh
-# To ATTACH an OBJECT to a ROBOT's END-EFFECTOR:
+```bash
+# Attach an object to the robot's end effector.
 ros2 service call /ATTACHLINK linkattacher_msgs/srv/AttachLink "{model1_name: 'model1', link1_name: 'link1', model2_name: 'model2', link2_name: 'link2'}"
-# To DETACH the OBJECT from the END-EFFECTOR:
+
+# Detach the object.
 ros2 service call /DETACHLINK linkattacher_msgs/srv/DetachLink "{model1_name: 'model1', link1_name: 'link1', model2_name: 'model2', link2_name: 'link2'}"
 ```
 
-Elements are defined as follows:
-* model1 -> Name of the model/robot (defined in the robot .urdf). 
-* link1 -> Name of the end-effector link that the object will be attached to.
-* model2 -> Name of the object to be attached (defined in the object .urdf). 
-* link2 -> Name of the object link.
+| Request field | Description |
+| --- | --- |
+| `model1_name` | Name of the robot model in Gazebo. |
+| `link1_name` | Name of the robot's end-effector link. |
+| `model2_name` | Name of the spawned object model in Gazebo. |
+| `link2_name` | Name of the object's link. |
 
-__MAIN REQUIREMENT to execute the plugin: Gazebo .world file__
+### Load the plugin in a Gazebo Harmonic world
 
-In order for the /ATTACHLINK and /DETACHLINK ROS2 services to be available in simulation, the LinkAttacher Plugin must be initialised in Gazebo. This is done by adding the following line to the Gazebo world file:
+Place this inside the `<world>` element of your SDF world file:
+
+```xml
+<plugin filename="gz_link_attacher_plugin" name="gz::sim::systems::GzLinkAttacher"/>
 ```
-<plugin name="gazebo_link_attacher" filename="libgazebo_link_attacher.so"/>
+
+This replaces the Classic `libgazebo_link_attacher.so` / `gazebo_link_attacher` entry. The world must also load Harmonic's physics system, as in the included example. The ROS services are provided directly by the plugin; no `ros_gz_bridge` is needed for them.
+
+An optional ROS namespace can be set per world (use a distinct namespace when running multiple worlds):
+
+```xml
+<plugin filename="gz_link_attacher_plugin" name="gz::sim::systems::GzLinkAttacher">
+  <ros>
+    <namespace>/cell1</namespace>
+  </ros>
+</plugin>
 ```
 
-An example of how the plugin is initialised in a world file can be found in the ros2_SimRealRobotControl GitHub repository [here](https://github.com/IFRA-Cranfield/ros2_SimRealRobotControl/blob/humble/ur3/ros2srrc_ur3_gazebo/worlds/ur3.world).
+This exposes `/cell1/ATTACHLINK` and `/cell1/DETACHLINK`.
 
-__EXAMPLE: Pick and place execution__
+### UR3 and cube test
 
-The source code for the pick and place video (UR3 + Robotiq 2f-85) shown [above](https://www.youtube.com/watch?v=t4L4VAfgqZw) and instructions about how different robot programs are generated (including object grasping) can be found in the ros2_SimRealRobotControl GitHub repository [here](https://github.com/IFRA-Cranfield/ros2_SimRealRobotControl/tree/humble/ros2srrc_execution).
+Use two terminals: Terminal 1 runs the simulation and MoveIt, and Terminal 2 runs the test commands. Add the world plugin entry shown above before launching. Choose one test option per fresh simulation to avoid spawning duplicate cubes.
+
+#### Terminal 1 — Launch the UR3
+
+```bash
+ros2 launch ros2srrc_launch moveit2.launch.py package:=linkattacher_test config:=LATest_1
+```
+
+#### Terminal 2 — Run a test
+
+##### Option 1 — Show attachment with a visible offset
+
+This test keeps the cube away from the end effector so the attachment is easy
+to see. Contact is not required: the plugin preserves the relative position
+and orientation of the two links when attaching.
+
+**1. Spawn the white cube.**
+
+```bash
+ros2 run ros2srrc_execution SpawnObject.py --package linkattacher_test --sdf WhiteCube.sdf --name WhiteCube --x 0.257 --y 0.363 --z 0.92
+```
+
+**2. Move the robot to the starting configuration.**
+
+```bash
+ros2 action send_goal -f /Move ros2srrc_data/action/Move "{action: 'MoveJ', movej: {joint1: 90.00, joint2: -90.00, joint3: 90.00, joint4: -90.00, joint5: -90.00, joint6: 0.00}, speed: 1.0}"
+```
+
+**3. Lower the end effector by 0.20 m.**
+
+```bash
+ros2 action send_goal -f /Move ros2srrc_data/action/Move "{action: 'MoveL', movel: {x: 0.00, y: 0.00, z: -0.2}, speed: 1.0}"
+```
+
+**4. Attach the cube to `EE_LinkAttacher`.**
+
+```bash
+ros2 service call /ATTACHLINK linkattacher_msgs/srv/AttachLink "{model1_name: 'ur3', link1_name: 'EE_LinkAttacher', model2_name: 'WhiteCube', link2_name: 'WhiteCube'}"
+```
+
+**5. Raise the end effector by 0.20 m.** The cube should move up with the robot, maintaining its offset from the end effector.
+
+```bash
+ros2 action send_goal -f /Move ros2srrc_data/action/Move "{action: 'MoveL', movel: {x: 0.00, y: 0.00, z: 0.2}, speed: 1.0}"
+```
+
+**6. Detach the cube.** It should fall under gravity.
+
+```bash
+ros2 service call /DETACHLINK linkattacher_msgs/srv/DetachLink "{model1_name: 'ur3', link1_name: 'EE_LinkAttacher', model2_name: 'WhiteCube', link2_name: 'WhiteCube'}"
+```
+
+##### Option 2 — Simulate a pick and release
+
+This test places the cube on the table and moves the end effector to the cube before attaching it.
+
+**1. Spawn the white cube.**
+
+```bash
+ros2 run ros2srrc_execution SpawnObject.py --package linkattacher_test --sdf WhiteCube.sdf --name WhiteCube --x 0.257 --y 0.363 --z 0.92
+```
+
+**2. Move the robot to the starting configuration.**
+
+```bash
+ros2 action send_goal -f /Move ros2srrc_data/action/Move "{action: 'MoveJ', movej: {joint1: 90.00, joint2: -90.00, joint3: 90.00, joint4: -90.00, joint5: -90.00, joint6: 0.00}, speed: 1.0}"
+```
+
+**3. Move the end effector above the cube.**
+
+```bash
+ros2 action send_goal -f /Robmove ros2srrc_data/action/Robmove "{type: 'LIN', speed: 1.0, x: 0.257, y: 0.363, z: 0.90, qx: 1.0, qy: 0.0, qz: 0.0, qw: 0.0}"
+```
+
+**4. Lower the end effector by 0.02 m.**
+
+```bash
+ros2 action send_goal -f /Move ros2srrc_data/action/Move "{action: 'MoveL', movel: {x: 0.00, y: 0.00, z: -0.02}, speed: 0.1}"
+```
+
+**5. Attach the cube to `EE_LinkAttacher`.**
+
+```bash
+ros2 service call /ATTACHLINK linkattacher_msgs/srv/AttachLink "{model1_name: 'ur3', link1_name: 'EE_LinkAttacher', model2_name: 'WhiteCube', link2_name: 'WhiteCube'}"
+```
+
+**6. Raise the end effector by 0.20 m.** The cube should lift with the robot.
+
+```bash
+ros2 action send_goal -f /Move ros2srrc_data/action/Move "{action: 'MoveL', movel: {x: 0.00, y: 0.00, z: 0.2}, speed: 1.0}"
+```
+
+**7. Detach the cube.** It should fall back onto the table.
+
+```bash
+ros2 service call /DETACHLINK linkattacher_msgs/srv/DetachLink "{model1_name: 'ur3', link1_name: 'EE_LinkAttacher', model2_name: 'WhiteCube', link2_name: 'WhiteCube'}"
+```
 
 <br />
 
@@ -165,7 +286,7 @@ The source code for the pick and place video (UR3 + Robotiq 2f-85) shown [above]
 <p>
   You can cite our work with the following statement:
   <br />
-  IFRA-Cranfield (2023) Gazebo-ROS2 Link Attacher. URL: https://github.com/IFRA-Cranfield/IFRA_LinkAttacher.
+  IFRA-Cranfield (2023) Gazebo-ROS 2 Link Attacher. URL: https://github.com/IFRA-Cranfield/IFRA_LinkAttacher.
 </p>
 
 <br />

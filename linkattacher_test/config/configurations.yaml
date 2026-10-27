@@ -1,0 +1,9 @@
+# UR3 - Cranfield University:
+
+Configurations:
+
+  - ID: "LATest_1"
+    Name: "UR3 Robot alone on Cranfield University (IA Lab) Stand."
+    urdf: "LATest_1.urdf.xacro"
+    rob: "ur3"
+    ee: "none"

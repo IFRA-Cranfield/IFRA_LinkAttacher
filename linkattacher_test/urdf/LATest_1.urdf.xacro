@@ -1,0 +1,150 @@
+<?xml version="1.0" ?>
+
+<!-- 
+
+# ===================================== COPYRIGHT ===================================== #
+#                                                                                       #
+#  IFRA (Intelligent Flexible Robotics and Assembly) Group, CRANFIELD UNIVERSITY        #
+#  Created on behalf of the IFRA Group at Cranfield University, United Kingdom          #
+#  E-mail: IFRA@cranfield.ac.uk                                                         #
+#                                                                                       #
+#  Licensed under the Apache-2.0 License.                                               #
+#  You may not use this file except in compliance with the License.                     #
+#  You may obtain a copy of the License at: http://www.apache.org/licenses/LICENSE-2.0  #
+#                                                                                       #
+#  Unless required by applicable law or agreed to in writing, software distributed      #
+#  under the License is distributed on an "as-is" basis, without warranties or          #
+#  conditions of any kind, either express or implied. See the License for the specific  #
+#  language governing permissions and limitations under the License.                    #
+#                                                                                       #
+#  IFRA Group - Cranfield University                                                    #
+#  AUTHORS: Mikel Bueno Viso - Mikel.Bueno-Viso@cranfield.ac.uk                         #
+#           Dr. Seemal Asif  - s.asif@cranfield.ac.uk                                   #
+#           Prof. Phil Webb  - p.f.webb@cranfield.ac.uk                                 #
+#                                                                                       #
+#  Date: April, 2025.                                                                   #
+#                                                                                       #
+# ===================================== COPYRIGHT ===================================== #
+
+# ======= CITE OUR WORK ======= #
+# You can cite our work with the following statements:
+# IFRA-Cranfield (2023) ROS 2 Sim-to-Real Robot Control. URL: https://github.com/IFRA-Cranfield/ros2_SimRealRobotControl.
+# IFRA-Cranfield (2025) ROS 2 Sim-to-Real Robot Control. UR3 Robot. URL: https://github.com/IFRA-Cranfield/ur3_CranfieldRobotics.
+
+-->
+
+<robot name="ur3" xmlns:xacro="http://ros.org/wiki/xacro">
+
+  <!-- PASS ARGUMENTS: -->
+  <xacro:arg name="bringup" default="false"/>
+  <xacro:property name="bringup" value="$(arg bringup)"/>
+  <xacro:arg name="robot_ip" default="0.0.0.0"/>
+  <xacro:property name="robot_ip" value="$(arg robot_ip)"/>
+
+  <xacro:arg name="EE" default="false"/>
+  <xacro:property name="EE" value="$(arg EE)"/>
+  <xacro:arg name="EE_name" default="none"/>
+  <xacro:property name="EE_name" value="$(arg EE_name)"/>
+
+  <xacro:arg name="prefix" default=""/>
+  <xacro:property name="prefix" value="$(arg prefix)"/>
+
+  <!-- UR3 Control ARGUMENTS -->
+  <xacro:arg name="script_filename" default="none"/>
+  <xacro:property name="script_filename" value="$(arg script_filename)"/>
+  <xacro:arg name="input_recipe_filename" default="none"/>
+  <xacro:property name="input_recipe_filename" value="$(arg input_recipe_filename)"/>
+  <xacro:arg name="output_recipe_filename" default="none"/>
+  <xacro:property name="output_recipe_filename" value="$(arg output_recipe_filename)"/>
+
+  <!-- Include XACRO-MACRO file of the UR3: -->
+  <xacro:include filename="$(find ros2srrc_robots)/ur3/urdf/ur3_macro.urdf.xacro"/>	
+  <xacro:ur3 
+    bringup="${bringup}"
+    robot_ip="${robot_ip}"
+    EE="${EE}"
+    EE_name="${EE_name}"
+
+    script_filename="${script_filename}"
+    input_recipe_filename="${input_recipe_filename}"
+    output_recipe_filename="${output_recipe_filename}"
+    prefix="${prefix}"
+  />
+
+  <!-- Load ROS 2 Gazebo Plugin -->
+  <xacro:unless value="${bringup}">
+    
+    <gazebo>
+      <plugin filename="gz_ros2_control-system" name="gz_ros2_control::GazeboSimROS2ControlPlugin">
+
+        <!-- UR3 Controller -->
+        <parameters>$(find ros2srrc_robots)/ur3/config/controller.yaml</parameters>
+
+      </plugin>
+    </gazebo>
+
+  </xacro:unless>
+
+  <!-- World: LINK -->
+  <link name="world"/>
+  
+  <!-- Robot Stand: LINK -->
+  <link name='${prefix}ur3_stand'>
+    <visual>
+      <origin xyz="0.0 0.0 0.0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="file://$(find linkattacher_test)/meshes/ur3stand/ur3stand_complete.dae" scale="1 1 1" />
+      </geometry>
+    </visual>
+    <collision>
+      <origin xyz="0.0 0.0 0.0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="file://$(find linkattacher_test)/meshes/ur3stand/ur3stand_complete.dae" scale="1 1 1" />
+      </geometry>
+    </collision>
+    <inertial>
+      <mass value="1000.0"/>
+      <inertia ixx="100.0" ixy="0.0" ixz="0.0" iyy="100.0" iyz="0.0" izz="100.0" />
+    </inertial>
+  </link>
+
+  <!-- Robot Stand: FIXED JOINT -->
+  <joint name="${prefix}world_joint" type="fixed">
+    <parent link="world" />
+    <child link = "${prefix}ur3_stand" />
+    <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0" />
+  </joint>
+
+  <!-- Robot Stand: Robot+Stand JOINT -->
+  <joint name="${prefix}ur_joint" type="fixed">
+    <parent link="${prefix}ur3_stand" />
+    <child link = "${prefix}base_link" />
+    <origin xyz="0.0 0.0 0.85" rpy="0.0 0.0 0.0" /> 
+  </joint>
+
+  <!-- SMALL CUBE TO TEST LinkAttacher PLUGIN -->
+
+  <link name="${prefix}EE_LinkAttacher">
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <mass value="0.00001" />
+      <inertia ixx="0.001" ixy="0.0" ixz="0.0" iyy="0.001" iyz="0.0" izz="0.001"/>
+    </inertial>
+    <visual>
+      <geometry>
+        <box size= "0.001 0.001 0.001" />
+      </geometry>
+    </visual>
+  </link>
+
+  <joint name="${prefix}EE_LinkAttacher_joint" type="fixed" >
+    <parent link="${prefix}tool0" />
+    <child link="${prefix}EE_LinkAttacher" />
+    <origin xyz="0.0 0.0 0.01" rpy="0 0 0"/>
+  </joint>
+
+  <gazebo reference="${prefix}EE_LinkAttacher_joint">
+    <preserveFixedJoint>true</preserveFixedJoint>
+  </gazebo>
+
+</robot>

@@ -105,7 +105,7 @@ cd ~/dev_ws
 colcon build
 ```
 
-The build uses the ROS `gz_sim_vendor` and `gz_plugin_vendor` packages, with no hardcoded Gazebo include paths. Sourcing the workspace adds the installed plugin library directory to `GZ_SIM_SYSTEM_PLUGIN_PATH`. For the plugin alone, build `--packages-up-to linkattacher_ros2`. The plugin package contains no test targets or test assets; all testing belongs to `linkattacher_test`. The UR3 test uses the existing `ros2_SimRealRobotControl` workspace packages.
+The build uses the ROS `gz_sim_vendor` and `gz_plugin_vendor` packages, with no hardcoded Gazebo include paths. Sourcing the workspace adds the installed plugin library directory to `GZ_SIM_SYSTEM_PLUGIN_PATH`. For the plugin alone, build `--packages-up-to linkattacher_ros2`. The plugin package contains no test targets or test assets; all testing belongs to `linkattacher_test`. The UR3 test uses the existing `ros2srrc` workspace packages.
 
 <br />
 

@@ -123,11 +123,11 @@ In order for the /ATTACHLINK and /DETACHLINK ROS2 services to be available in si
 <plugin name="gazebo_link_attacher" filename="libgazebo_link_attacher.so"/>
 ```
 
-An example of how the plugin is initialised in a world file can be found in the ros2_SimRealRobotControl GitHub repository [here](https://github.com/IFRA-Cranfield/ros2_SimRealRobotControl/blob/humble/ur3/ros2srrc_ur3_gazebo/worlds/ur3.world).
+An example of how the plugin is initialised in a world file can be found in the ros2srrc GitHub repository [here](https://github.com/IFRA-Cranfield/ros2srrc/blob/humble/ur3/ros2srrc_ur3_gazebo/worlds/ur3.world).
 
 __EXAMPLE: Pick and place execution__
 
-The source code for the pick and place video (UR3 + Robotiq 2f-85) shown [above](https://www.youtube.com/watch?v=t4L4VAfgqZw) and instructions about how different robot programs are generated (including object grasping) can be found in the ros2_SimRealRobotControl GitHub repository [here](https://github.com/IFRA-Cranfield/ros2_SimRealRobotControl/tree/humble/ros2srrc_execution).
+The source code for the pick and place video (UR3 + Robotiq 2f-85) shown [above](https://www.youtube.com/watch?v=t4L4VAfgqZw) and instructions about how different robot programs are generated (including object grasping) can be found in the ros2srrc GitHub repository [here](https://github.com/IFRA-Cranfield/ros2srrc/tree/humble/ros2srrc_execution).
 
 <br />
 
